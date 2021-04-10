@@ -1,93 +1,78 @@
-///17.8.2020
+///1-4-2021
 ///Articulation Bridge
+/// Time complexity O(V+E)
+///Notes: cosider disconnected graph
 
 #include<bits/stdc++.h>
 using namespace std;
-typedef long long ll;
-const ll inf = 1e9;
+#define SZ 10005
 
-#define mod             1e9+7
-#define what_is(x)      cerr<<#x<<" is "<<x<<"\n";
-#define read(x)         freopen("in.txt","r",stdin);
-#define write(x)        freopen("out.txt","w",stdout);
-#define Fast            ios_base::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+int Time;
+vector<int> adj[SZ];
+int vis[SZ],low[SZ],dis[SZ];
+vector< pair< int, int > > bridge;
 
-#define sz              10005
-int t;
-bool vis[sz];
-vector< int >adj[sz];
-int d[sz],p[sz],low[sz];
-vector< pair< int , int > >links;
-
-void dfs(int u){
+void dfs(int u, int par) {
     vis[u]=1;
-    d[u]=low[u]=++t;
-    for(int i=0; i<adj[u].size(); i++){
-        int v=adj[u][i];
-        if(vis[v]==0){
-            p[v]=u;
-            dfs(v);
-            low[u]=min(low[u],low[v]);
-
-            if(low[v]>d[u]){
-                int a=min(u,v);
-                int b=max(u,v);
-                links.push_back({a,b});
+    low[u]=dis[u]=++Time;
+    for(int v : adj[u]) {
+        if(!vis[v]) {
+            dfs(v, u);
+            low[u] = min(low[u], low[v]);
+            if(low[v]>dis[u]){
+                int a=min(u, v);
+                int b=max(u, v);
+                bridge.push_back({a,b});
             }
-
-        }
-        else if(v!=p[u]){
-            low[u]=min(low[u],d[v]);
+        }else{
+            if(v != par) low[u] = min(low[u], dis[v]);
         }
     }
 }
 
 void reset(int n){
-    links.clear();
+    Time=0;
+    bridge.clear();
     for(int i=0; i<n; i++){
+        vis[i]=low[i]=dis[i]=0;
         adj[i].clear();
-        p[i]=-1;
-        d[i]=low[i]=vis[i]=0;
     }
-}
-
-void solve(int n){
-    for(int i=0; i<n; i++){
-        if(vis[i]==0){
-            t=0;
-            dfs(i);
-        }
-    }
-   if(links.size())sort(links.begin(),links.end());
-
 }
 
 int main(){
-    Fast;///using Fast I/O
-    int u,v,a,b,c, i,j,k, t,n,m,cs=1;
 
+    //freopen("in.txt", "r", stdin);
+    //freopen("out.txt", "w", stdout);
+    ios_base::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+
+    char ch;
+    int t, n,m,a,b;
     cin>>t;
-    while(t--){
+    for(int cs=1; cs<=t; cs++){
         cin>>n;
         reset(n);
-        char ch;
-        for(i=1; i<=n; i++){
-            cin>>u>>ch>>k>>ch;
-            for(j=1; j<=k; j++){
-                cin>>v;
-                adj[u].push_back(v);
-                adj[v].push_back(u);
+        for(int i=0;i<n;i++){
+            cin>>a>>ch>>m>>ch;
+            for(int j=0; j<m; j++){
+                cin>>b;
+                adj[a].push_back(b);
+                adj[b].push_back(a);
             }
         }
+        for(int i=0; i<n; i++)if(!vis[i]){
+            Time=0;
+            dfs(i,-1);
+        }
 
-        solve(n);
-        cout<<"Case "<<cs++<<":"<<endl;
-        cout<<links.size() <<" critical links"<<endl;
-        for(int i=0; i<links.size(); i++){
-            cout<<links[i].first<<" - "<<links[i].second<<endl;
+        cout<<"Case "<<cs<<":"<<endl;
+        cout<<bridge.size()<<' '<<"critical links"<<endl;
+        if(bridge.size())sort(bridge.begin(), bridge.end());
+        for(auto i: bridge){
+            cout<<i.first<<" - "<<i.second<<endl;
         }
     }
-
     return 0;
 }
+
+
 
