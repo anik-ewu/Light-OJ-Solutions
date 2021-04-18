@@ -1,119 +1,98 @@
+///11-April-2021
+///Tags: BFS/Flood Fill
+///Notes: Start bfs with the position of fires(there can be multiple fire) then keep track of the grid location
+///that is not already in fire and make moves of Jane on those location.
+
 #include<bits/stdc++.h>
 using namespace std;
 
-char grid[201][201];
-bool mark_fire[201][201];
-bool mark_jane[201][201];
-int fire_cost[201][201];
-int jane_cost[201][201];
-vector < pair < int , int > > vp;
+const int N=205;
 
-int X[]={1, -1, 0, 0};
-int Y[]={0, 0, 1, -1};
+int n,m;
+char g[N][N];
+int cost[N][N];
+bool vis[2][N][N];
+vector< pair< int, int > > fire;
 
-bool check_fire(int x, int y, int n, int m){
-    if(x>=1 and x<=n and y>=1 and y<=m and grid[x][y]!='#' and mark_fire[x][y]==0)return true;
-    return false;
-}
-bool check_jane(int x, int y, int n, int m){
-    if(x>=1 and x<=n and y>=1 and y<=m and grid[x][y]!='#' and mark_jane[x][y]==0)return true;
-    return false;
+int fx[]= {1,-1,0,0};
+int fy[]= {0,0,1,-1};
+
+bool check(int x , int y){
+    return (x>=1 and x<=n and y>=1 and y<=m and g[x][y]!='#'); //. J F
 }
 
-void bfs_make_fire(int n, int m){
+string bfs(pair< int, int > jane){
 
-    int i,x,y;
-    queue < pair < int , int > > q;
-    for(i=0; i<vp.size(); i++){
-        x=vp[i].first;
-        y=vp[i].second;
-        mark_fire[x][y]=1;
-        fire_cost[x][y]=0;
-        q.push({x,y});
+    queue< pair< char ,pair< int ,  int > > >q;
+    memset(cost, 0, sizeof(cost));
+    memset(vis, 0, sizeof(vis));
+    for(int i=0; i<fire.size(); i++){
+        q.push({'F', {fire[i].first, fire[i].second}});
+        vis[0][fire[i].first][fire[i].second]=1;
     }
+    q.push({'J', {jane.first, jane.second}});
+    vis[1][jane.first][jane.second]=1;
+    cost[jane.first][jane.second]=0;
+
     while(!q.empty()){
-        x=q.front().first;
-        y=q.front().second;
+        int ch=q.front().first;
+        int x=q.front().second.first;
+        int y=q.front().second.second;
         q.pop();
-        for(int i=0; i<4; i++){
-            int dx=x+X[i];
-            int dy=y+Y[i];
-            if(check_fire(dx,dy,n,m)){
-                q.push({dx,dy});
-                mark_fire[dx][dy]=1;
-                fire_cost[dx][dy]=1+fire_cost[x][y];
+
+        if(ch=='J' and (x==1 || y==1 || x==n || y==m)){
+            string moves;
+            stringstream ss;
+            ss<<cost[x][y]+1;
+            ss>>moves;
+            return moves;
+            }
+
+        for(int k=0; k<4; k++){
+            int u=x+fx[k];
+            int v=y+fy[k];
+
+            if(check(u, v)){
+                if(ch=='J'){
+                    if(vis[0][u][v]==0 and vis[1][u][v]==0){
+                        vis[1][u][v]=1;
+                        cost[u][v]=cost[x][y]+1;
+                        q.push({'J', {u, v}});
+                    }
+                }
+                else{
+                    if(vis[0][u][v]==0){
+                        vis[0][u][v]=1;
+                        q.push({'F',{u, v}});
+                    }
+                }
             }
         }
     }
-}
-
-
-int  bfs_save_jane(int x,int y,int n, int m){
-
-    queue < pair < int , int > > q;
-    mark_jane[x][y]=1;
-    jane_cost[x][y]=1;
-    q.push({x,y});
-
-    while(!q.empty()){
-        x=q.front().first;
-        y=q.front().second;
-        q.pop();
-        if(x==1 || y==1 || x==n || y==m)return jane_cost[x][y];
-        for(int i=0; i<4; i++){
-            int dx=x+X[i];
-            int dy=y+Y[i];
-            if(check_jane(dx,dy,n,m)&& jane_cost[x][y]+1<=fire_cost[dx][dy]){
-                q.push({dx,dy});
-                mark_jane[dx][dy]=1;
-                jane_cost[dx][dy]=1+jane_cost[x][y];
-            }
-        }
-    }
-    return -1;
-}
-
-void print(int n,int m){
-    for(int i=1; i<=n; i++){
-        for(int j=1; j<=m; j++){
-            cout<<jane_cost[i][j]<<' ';
-        }
-        cout<<endl;
-    }
+	return "IMPOSSIBLE";
 
 }
 
 int main(){
 
-    ios_base::sync_with_stdio(0);
-    cin.tie(0);
-    ///freopen("input.txt","r",stdin);
+    freopen("in.txt", "r" ,stdin);
 
-    int t,tc,i,j,n,m,ans,x,y;
+    int t;
+    pair< int, int > jane;
     cin>>t;
-    for(tc=1; tc<=t; tc++){
+    for(int tc=1; tc<=t; tc++){
         cin>>n>>m;
-        vp.clear();
-        for(i=1; i<=n; i++){
-            for(j=1; j<=m; j++){
-                cin>>grid[i][j];
-                if(grid[i][j]=='J'){x=i;y=j;}
-                if(grid[i][j]=='F')vp.push_back({i,j});
+        fire.clear();
+        for(int i=1; i<=n; i++){
+            for(int j=1; j<=m; j++){
+                cin>>g[i][j];
+                if(g[i][j]=='J')jane={i,j};
+                if(g[i][j]=='F')fire.push_back({i,j});
             }
         }
-        memset(mark_fire,0,sizeof(mark_fire));
-        memset(fire_cost,0,sizeof(fire_cost));
-        bfs_make_fire(n,m);
-
-        memset(mark_jane,0,sizeof(mark_jane));
-        memset(jane_cost,0,sizeof(jane_cost));
-        ans=bfs_save_jane(x,y,n,m);
-        //print(n,m);
-        if(ans!=-1)
-        cout<<"Case "<<tc<<": "<<ans<<endl;
-        else
-        cout<<"Case "<<tc<<": IMPOSSIBLE"<<endl;
-
+        cout<<"Case "<<tc<<": "<<bfs(jane)<<endl;
     }
-    return 0;
+
+
+    return  0;
 }
